@@ -740,7 +740,7 @@ reqwest-retry = "0.2.1"
 ring = { version = "0.16.20", features = ["std"] }
 ripemd = "0.1.1"
 rlimit = "0.10.2"
-rocksdb = { version = "0.21.0", features = ["lz4"] }
+rocksdb = { version = "0.22.0", features = ["lz4"] }
 rsa = { version = "0.9.6" }
 rstack-self = { version = "0.3.0", features = ["dw"], default-features = false }
 rstest = "0.15.0"
@@ -769,7 +769,7 @@ serde_with = "3.4.0"
 serde_yaml = "0.8.24"
 set_env = "1.3.4"
 shadow-rs = "0.16.2"
-simplelog = "0.9.0"
+simplelog = "0.12.2"
 smallbitvec = "2.5.1"
 smallvec = "1.8.0"
 static_assertions = "1.1.0"

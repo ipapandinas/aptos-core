@@ -87,12 +87,10 @@ tokio-stream = { workspace = true }
 [dev-dependencies]
 aptos-config = { workspace = true, features = ["fuzzing"] }
 aptos-consensus-types = { workspace = true, features = ["fuzzing"] }
-aptos-keygen = { workspace = true }
 aptos-mempool = { workspace = true, features = ["fuzzing"] }
 aptos-netcore = { workspace = true }
 aptos-network = { workspace = true, features = ["fuzzing"] }
 aptos-safety-rules = { workspace = true, features = ["testing"] }
-aptos-transaction-filters = { workspace = true, features = ["fuzzing"] }
 aptos-types = { workspace = true, features = ["testing"] }
 claims = { workspace = true }
 mockall = { workspace = true }

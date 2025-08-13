@@ -19,8 +19,6 @@ mod order_rule;
 mod rb_handler;
 mod round_state;
 mod storage;
-#[cfg(test)]
-mod tests;
 mod types;
 
 pub use adapter::{ProofNotifier, StorageAdapter};

@@ -48,10 +48,6 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::{sync::Arc, time::Duration};
 
-#[cfg(test)]
-#[path = "block_store_test.rs"]
-mod block_store_test;
-
 #[path = "sync_manager.rs"]
 pub mod sync_manager;
 

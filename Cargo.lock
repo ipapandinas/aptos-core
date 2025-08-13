@@ -940,7 +940,6 @@ dependencies = [
  "aptos-experimental-runtimes",
  "aptos-fallible",
  "aptos-infallible",
- "aptos-keygen",
  "aptos-logger",
  "aptos-mempool",
  "aptos-metrics-core",

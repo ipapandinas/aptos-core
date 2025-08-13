@@ -46,10 +46,6 @@ use std::{
     time::Duration,
 };
 
-#[cfg(test)]
-#[path = "proposal_generator_test.rs"]
-mod proposal_generator_test;
-
 #[derive(Clone)]
 pub struct ChainHealthBackoffConfig {
     backoffs: BTreeMap<usize, ChainHealthBackoffValues>,

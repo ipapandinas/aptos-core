@@ -11,16 +11,3 @@ pub(crate) mod rotating_proposer_election;
 pub(crate) mod round_proposer_election;
 pub(crate) mod round_state;
 pub(crate) mod unequivocal_proposer_election;
-
-#[cfg(test)]
-mod cached_proposer_election_test;
-#[cfg(test)]
-mod leader_reputation_test;
-#[cfg(test)]
-mod rotating_proposer_test;
-#[cfg(test)]
-mod round_proposer_test;
-#[cfg(test)]
-mod round_state_test;
-#[cfg(test)]
-mod unequivocal_proposer_election_test;

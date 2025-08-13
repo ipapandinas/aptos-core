@@ -463,11 +463,14 @@ mod tests {
         // Verify the metadata of the highest advertised version
         let advertised_version_metadata =
             get_advertised_version_metadata(&mut latency_monitor, &highest_advertised_version);
-        assert_eq!(advertised_version_metadata, AdvertisedVersionMetadata {
-            seen_time_instant: time_service.now(),
-            seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
-            seen_after_sync: false,
-        });
+        assert_eq!(
+            advertised_version_metadata,
+            AdvertisedVersionMetadata {
+                seen_time_instant: time_service.now(),
+                seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
+                seen_after_sync: false,
+            }
+        );
 
         // Elapse the time
         elapse_time(time_service.clone(), 1000);
@@ -485,11 +488,14 @@ mod tests {
         // Verify the metadata of the highest advertised version
         let advertised_version_metadata =
             get_advertised_version_metadata(&mut latency_monitor, &highest_advertised_version);
-        assert_eq!(advertised_version_metadata, AdvertisedVersionMetadata {
-            seen_time_instant: time_service.now(),
-            seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
-            seen_after_sync: false,
-        });
+        assert_eq!(
+            advertised_version_metadata,
+            AdvertisedVersionMetadata {
+                seen_time_instant: time_service.now(),
+                seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
+                seen_after_sync: false,
+            }
+        );
     }
 
     #[tokio::test]
@@ -555,11 +561,14 @@ mod tests {
         verify_advertised_version_timestamps_length(&mut latency_monitor, 1);
         let advertised_version_metadata =
             get_advertised_version_metadata(&mut latency_monitor, &highest_advertised_version);
-        assert_eq!(advertised_version_metadata, AdvertisedVersionMetadata {
-            seen_time_instant: time_service.now(),
-            seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
-            seen_after_sync: false,
-        });
+        assert_eq!(
+            advertised_version_metadata,
+            AdvertisedVersionMetadata {
+                seen_time_instant: time_service.now(),
+                seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
+                seen_after_sync: false,
+            }
+        );
 
         // Elapse some time
         elapse_time(time_service.clone(), 1000);
@@ -579,11 +588,14 @@ mod tests {
         // Verify the metadata of the highest advertised version
         let advertised_version_metadata =
             get_advertised_version_metadata(&mut latency_monitor, &highest_advertised_version);
-        assert_eq!(advertised_version_metadata, AdvertisedVersionMetadata {
-            seen_time_instant: time_service.now(),
-            seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
-            seen_after_sync: true,
-        });
+        assert_eq!(
+            advertised_version_metadata,
+            AdvertisedVersionMetadata {
+                seen_time_instant: time_service.now(),
+                seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
+                seen_after_sync: true,
+            }
+        );
 
         // Update the advertised version timestamps again. But, this time
         // the highest synced version is greater than the highest advertised version.
@@ -600,11 +612,14 @@ mod tests {
         // Verify the metadata of the highest advertised version
         let advertised_version_metadata =
             get_advertised_version_metadata(&mut latency_monitor, &highest_advertised_version);
-        assert_eq!(advertised_version_metadata, AdvertisedVersionMetadata {
-            seen_time_instant: time_service.now(),
-            seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
-            seen_after_sync: true,
-        });
+        assert_eq!(
+            advertised_version_metadata,
+            AdvertisedVersionMetadata {
+                seen_time_instant: time_service.now(),
+                seen_timestamp_usecs: time_service.now_unix_time().as_micros() as u64,
+                seen_after_sync: true,
+            }
+        );
     }
 
     #[tokio::test]

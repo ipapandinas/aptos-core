@@ -1,10 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::txn_hash_and_authenticator_deduper::TxnHashAndAuthenticatorDeduper;
-use aptos_logger::info;
-use aptos_types::{on_chain_config::TransactionDeduperType, transaction::SignedTransaction};
-use std::sync::Arc;
+use aptos_types::transaction::SignedTransaction;
 
 /// Interface to dedup transactions. The dedup filters duplicate transactions within a block.
 pub trait TransactionDeduper: Send + Sync {
@@ -20,14 +17,3 @@ impl TransactionDeduper for NoOpDeduper {
     }
 }
 
-pub fn create_transaction_deduper(
-    deduper_type: TransactionDeduperType,
-) -> Arc<dyn TransactionDeduper> {
-    match deduper_type {
-        TransactionDeduperType::NoDedup => Arc::new(NoOpDeduper {}),
-        TransactionDeduperType::TxnHashAndAuthenticatorV1 => {
-            info!("Using simple hash set transaction deduper");
-            Arc::new(TxnHashAndAuthenticatorDeduper::new())
-        },
-    }
-}

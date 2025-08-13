@@ -39,8 +39,6 @@ pub mod quorum_store;
 mod rand;
 mod recovery_manager;
 mod round_manager;
-mod state_computer;
-mod state_replication;
 #[cfg(any(test, feature = "fuzzing"))]
 mod test_utils;
 #[cfg(test)]
@@ -61,7 +59,6 @@ mod transaction_deduper;
 mod transaction_shuffler;
 #[cfg(feature = "fuzzing")]
 pub use transaction_shuffler::transaction_shuffler_fuzzing;
-mod txn_hash_and_authenticator_deduper;
 
 use aptos_metrics_core::IntGauge;
 pub use consensusdb::create_checkpoint;

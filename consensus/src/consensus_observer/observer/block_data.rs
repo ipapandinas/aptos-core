@@ -16,7 +16,6 @@ use crate::{
         },
     },
     pipeline::pipeline_builder::PipelineBuilder,
-    state_replication::StateComputerCommitCallBackType,
 };
 use aptos_config::config::ConsensusObserverConfig;
 use aptos_consensus_types::{
@@ -337,17 +336,6 @@ pub fn create_commit_callback(
     observer_block_data: Arc<Mutex<ObserverBlockData>>,
 ) -> Box<dyn FnOnce(WrappedLedgerInfo, LedgerInfoWithSignatures) + Send + Sync> {
     Box::new(move |_, ledger_info: LedgerInfoWithSignatures| {
-        observer_block_data
-            .lock()
-            .handle_committed_blocks(ledger_info);
-    })
-}
-
-/// Creates and returns the commit callback used by the old pipeline
-pub fn create_commit_callback_deprecated(
-    observer_block_data: Arc<Mutex<ObserverBlockData>>,
-) -> StateComputerCommitCallBackType {
-    Box::new(move |_, ledger_info| {
         observer_block_data
             .lock()
             .handle_committed_blocks(ledger_info);

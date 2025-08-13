@@ -119,10 +119,10 @@ impl VUF for Bls12381G1Bls {
         })?;
         ensure!(
             Fq12::ONE
-                == Bls12_381::multi_pairing([-output_g1, input_g1], [
-                    G2Affine::generator(),
-                    (*pk_g2).into_affine()
-                ])
+                == Bls12_381::multi_pairing(
+                    [-output_g1, input_g1],
+                    [G2Affine::generator(), (*pk_g2).into_affine()]
+                )
                 .0,
             "Bls12381G1Bls::verify failed with final check failure"
         );

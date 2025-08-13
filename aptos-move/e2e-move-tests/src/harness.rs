@@ -922,17 +922,23 @@ impl MoveHarness {
         let core_signer_arg = MoveValue::Signer(AccountAddress::ONE)
             .simple_serialize()
             .unwrap();
-        self.executor
-            .exec("gas_schedule", "set_for_next_epoch", vec![], vec![
+        self.executor.exec(
+            "gas_schedule",
+            "set_for_next_epoch",
+            vec![],
+            vec![
                 core_signer_arg.clone(),
                 MoveValue::vector_u8(schedule_bytes)
                     .simple_serialize()
                     .unwrap(),
-            ]);
-        self.executor
-            .exec("aptos_governance", "force_end_epoch", vec![], vec![
-                core_signer_arg,
-            ]);
+            ],
+        );
+        self.executor.exec(
+            "aptos_governance",
+            "force_end_epoch",
+            vec![],
+            vec![core_signer_arg],
+        );
     }
 
     pub fn modify_gas_scaling(&mut self, gas_scaling_factor: u64) {

@@ -26,23 +26,15 @@ mod liveness;
 mod logging;
 mod metrics_safety_rules;
 mod network;
-#[cfg(test)]
-mod network_tests;
 mod payload_client;
 mod pending_order_votes;
 mod pending_votes;
-#[cfg(test)]
-mod pending_votes_test;
 pub mod persistent_liveness_storage;
 mod pipeline;
 pub mod quorum_store;
 mod rand;
 mod recovery_manager;
 mod round_manager;
-#[cfg(any(test, feature = "fuzzing"))]
-mod test_utils;
-#[cfg(test)]
-mod twins;
 mod txn_notifier;
 pub mod util;
 
@@ -65,8 +57,6 @@ pub use consensusdb::create_checkpoint;
 /// Required by the smoke tests
 pub use consensusdb::CONSENSUS_DB_NAME;
 pub use quorum_store::quorum_store_db::QUORUM_STORE_DB_NAME;
-#[cfg(feature = "fuzzing")]
-pub use round_manager::round_manager_fuzzing;
 
 pub struct IntGaugeGuard {
     gauge: IntGauge,

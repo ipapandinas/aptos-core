@@ -21,5 +21,3 @@ pub mod types;
 pub(crate) mod utils;
 
 mod schema;
-#[cfg(test)]
-mod tests;

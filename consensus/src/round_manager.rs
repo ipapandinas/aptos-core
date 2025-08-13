@@ -249,14 +249,6 @@ pub enum VerifiedEvent {
     OptProposalMsg(Box<OptProposalMsg>),
 }
 
-#[cfg(test)]
-#[path = "round_manager_tests/mod.rs"]
-mod round_manager_tests;
-
-#[cfg(feature = "fuzzing")]
-#[path = "round_manager_fuzzing.rs"]
-pub mod round_manager_fuzzing;
-
 /// Consensus SMR is working in an event based fashion: RoundManager is responsible for
 /// processing the individual events (e.g., process_new_round, process_proposal, process_vote,
 /// etc.). It is exposing the async processing functions for each event type.

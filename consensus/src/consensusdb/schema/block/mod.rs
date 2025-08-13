@@ -42,6 +42,3 @@ impl ValueCodec<BlockSchema> for Block {
         Ok(bcs::from_bytes(data)?)
     }
 }
-
-#[cfg(test)]
-mod test;

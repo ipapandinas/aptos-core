@@ -27,7 +27,6 @@ use crate::{
         },
         publisher::consensus_publisher::ConsensusPublisher,
     },
-    dag::DagCommitSigner,
     network::{IncomingCommitRequest, IncomingRandGenRequest},
     network_interface::CommitMessage,
     pipeline::{execution_client::TExecutionClient, pipeline_builder::PipelineBuilder},
@@ -1051,35 +1050,35 @@ impl ConsensusObserver {
     async fn wait_for_epoch_start(&mut self) {
         // Wait for the epoch state to update
         let block_payloads = self.observer_block_data.lock().get_block_payloads();
-        let (payload_manager, consensus_config, execution_config, randomness_config) = self
+        let (_payload_manager, _consensus_config, _execution_config, _randomness_config) = self
             .observer_epoch_state
             .wait_for_epoch_start(block_payloads)
             .await;
 
         // Fetch the new epoch state
-        let epoch_state = self.get_epoch_state();
+        let _epoch_state = self.get_epoch_state();
 
         // Start the new epoch
         let sk = Arc::new(bls12381::PrivateKey::genesis());
         let signer = Arc::new(ValidatorSigner::new(AccountAddress::ZERO, sk.clone()));
-        let dummy_signer = Arc::new(DagCommitSigner::new(signer.clone()));
-        let (_, rand_msg_rx) =
+        //let dummy_signer = Arc::new(DagCommitSigner::new(signer.clone()));
+        let (_, _rand_msg_rx) =
             aptos_channel::new::<AccountAddress, IncomingRandGenRequest>(QueueStyle::FIFO, 1, None);
-        self.execution_client
-            .start_epoch(
-                sk,
-                epoch_state.clone(),
-                dummy_signer.clone(),
-                payload_manager,
-                &consensus_config,
-                &execution_config,
-                &randomness_config,
-                None,
-                None,
-                rand_msg_rx,
-                0,
-            )
-            .await;
+        // self.execution_client
+        //     .start_epoch(
+        //         sk,
+        //         epoch_state.clone(),
+        //         dummy_signer.clone(),
+        //         payload_manager,
+        //         &consensus_config,
+        //         &execution_config,
+        //         &randomness_config,
+        //         None,
+        //         None,
+        //         rand_msg_rx,
+        //         0,
+        //     )
+        //     .await;
         self.pipeline_builder = Some(self.execution_client.pipeline_builder(signer));
     }
 

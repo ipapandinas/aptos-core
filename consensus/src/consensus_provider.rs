@@ -96,7 +96,6 @@ pub fn start_consensus(
         quorum_store_db.clone(),
         reconfig_events,
         bounded_executor,
-        aptos_time_service::TimeService::real(),
         vtxn_pool,
         rand_storage,
         consensus_publisher,

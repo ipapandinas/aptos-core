@@ -5,10 +5,10 @@
 use crate::{
     block_storage::tracing::{observe_block, BlockStage},
     counters,
-    dag::{
-        DAGMessage, DAGNetworkMessage, DAGRpcResult, ProofNotifier, RpcWithFallback,
-        TDAGNetworkSender,
-    },
+    // dag::{
+    //     DAGMessage, DAGNetworkMessage, DAGRpcResult, ProofNotifier, RpcWithFallback,
+    //     TDAGNetworkSender,
+    // },
     logging::{LogEvent, LogSchema},
     monitor,
     network_interface::{ConsensusMsg, ConsensusNetworkClient, RPC},
@@ -70,29 +70,6 @@ pub trait TConsensusMsg: Sized + Serialize + DeserializeOwned {
     fn into_network_message(self) -> ConsensusMsg;
 }
 
-#[derive(Debug)]
-pub struct RpcResponder {
-    pub protocol: ProtocolId,
-    pub response_sender: oneshot::Sender<Result<Bytes, RpcError>>,
-}
-
-impl RpcResponder {
-    pub fn respond<R>(self, response: R) -> anyhow::Result<()>
-    where
-        R: TConsensusMsg,
-    {
-        let rpc_response = self
-            .protocol
-            .to_bytes(&response.into_network_message())
-            .map(Bytes::from)
-            .map_err(RpcError::Error);
-
-        self.response_sender
-            .send(rpc_response)
-            .map_err(|_| anyhow::anyhow!("unable to respond to rpc"))
-    }
-}
-
 /// NOTE:
 /// 1. [`IncomingBlockRetrievalRequest`](DeprecatedIncomingBlockRetrievalRequest) struct was
 /// renamed to `DeprecatedIncomingBlockRetrievalRequest`.
@@ -126,13 +103,6 @@ pub struct IncomingBatchRetrievalRequest {
 }
 
 #[derive(Debug)]
-pub struct IncomingDAGRequest {
-    pub req: DAGNetworkMessage,
-    pub sender: Author,
-    pub responder: RpcResponder,
-}
-
-#[derive(Debug)]
 pub struct IncomingCommitRequest {
     pub req: CommitMessage,
     pub protocol: ProtocolId,
@@ -153,7 +123,6 @@ pub enum IncomingRpcRequest {
     /// TODO @bchocho @hariria can remove after all nodes upgrade to release with enum BlockRetrievalRequest (not struct)
     DeprecatedBlockRetrieval(DeprecatedIncomingBlockRetrievalRequest),
     BatchRetrieval(IncomingBatchRetrievalRequest),
-    DAGRequest(IncomingDAGRequest),
     CommitRequest(IncomingCommitRequest),
     RandGenRequest(IncomingRandGenRequest),
     BlockRetrieval(IncomingBlockRetrievalRequest),
@@ -164,7 +133,6 @@ impl IncomingRpcRequest {
     pub fn epoch(&self) -> Option<u64> {
         match self {
             IncomingRpcRequest::BatchRetrieval(req) => Some(req.req.epoch()),
-            IncomingRpcRequest::DAGRequest(req) => Some(req.req.epoch()),
             IncomingRpcRequest::RandGenRequest(req) => Some(req.req.epoch()),
             IncomingRpcRequest::CommitRequest(req) => req.req.epoch(),
             IncomingRpcRequest::DeprecatedBlockRetrieval(_) => None,
@@ -222,7 +190,6 @@ pub struct NetworkSender {
     // (self sending is not supported by the networking API).
     self_sender: aptos_channels::UnboundedSender<Event<ConsensusMsg>>,
     validators: Arc<ValidatorVerifier>,
-    time_service: aptos_time_service::TimeService,
 }
 
 impl NetworkSender {
@@ -237,7 +204,6 @@ impl NetworkSender {
             consensus_network_client,
             self_sender,
             validators,
-            time_service: aptos_time_service::TimeService::real(),
         }
     }
 
@@ -579,44 +545,6 @@ impl QuorumStoreSender for NetworkSender {
 }
 
 #[async_trait]
-impl TDAGNetworkSender for NetworkSender {
-    async fn send_rpc(
-        &self,
-        receiver: Author,
-        message: DAGMessage,
-        timeout: Duration,
-    ) -> anyhow::Result<DAGRpcResult> {
-        self.send_rpc(receiver, message.into_network_message(), timeout)
-            .await
-            .map_err(|e| anyhow!("invalid rpc response: {}", e))
-            .and_then(TConsensusMsg::from_network_message)
-    }
-
-    /// Given a list of potential responders, sending rpc to get response from any of them and could
-    /// fallback to more in case of failures.
-    async fn send_rpc_with_fallbacks(
-        self: Arc<Self>,
-        responders: Vec<Author>,
-        message: DAGMessage,
-        retry_interval: Duration,
-        rpc_timeout: Duration,
-        min_concurrent_responders: u32,
-        max_concurrent_responders: u32,
-    ) -> RpcWithFallback {
-        RpcWithFallback::new(
-            responders,
-            message,
-            retry_interval,
-            rpc_timeout,
-            self.clone(),
-            self.time_service.clone(),
-            min_concurrent_responders,
-            max_concurrent_responders,
-        )
-    }
-}
-
-#[async_trait]
 impl<Req: TConsensusMsg + RBMessage + 'static, Res: TConsensusMsg + RBMessage + 'static>
     RBNetworkSender<Req, Res> for NetworkSender
 {
@@ -657,17 +585,6 @@ impl<Req: TConsensusMsg + RBMessage + 'static, Res: TConsensusMsg + RBMessage + 
 
     fn sort_peers_by_latency(&self, peers: &mut [Author]) {
         self.sort_peers_by_latency(peers);
-    }
-}
-
-#[async_trait]
-impl ProofNotifier for NetworkSender {
-    async fn send_epoch_change(&self, proof: EpochChangeProof) {
-        self.send_epoch_change(proof).await
-    }
-
-    async fn send_commit_proof(&self, ledger_info: LedgerInfoWithSignatures) {
-        self.send_commit_proof(ledger_info).await
     }
 }
 
@@ -906,16 +823,6 @@ impl NetworkTask {
                                 req: *request,
                                 protocol,
                                 response_sender: callback,
-                            })
-                        },
-                        ConsensusMsg::DAGMessage(req) => {
-                            IncomingRpcRequest::DAGRequest(IncomingDAGRequest {
-                                req,
-                                sender: peer_id,
-                                responder: RpcResponder {
-                                    protocol,
-                                    response_sender: callback,
-                                },
                             })
                         },
                         ConsensusMsg::CommitMessage(req) => {

@@ -18,7 +18,7 @@ use aptos_consensus::{
         },
         publisher::consensus_publisher::ConsensusPublisher,
     },
-    consensus_provider::start_consensus_observer,
+    //consensus_provider::start_consensus_observer,
     network_interface::ConsensusMsg,
 };
 use aptos_consensus_notifications::ConsensusNotifier;
@@ -224,17 +224,17 @@ fn create_consensus_observer(
     }
 
     // Create the consensus observer
-    start_consensus_observer(
-        node_config,
-        consensus_observer_runtime,
-        consensus_observer_client,
-        consensus_observer_message_receiver,
-        consensus_publisher,
-        Arc::new(state_sync_notifier),
-        consensus_to_mempool_sender,
-        db_rw,
-        observer_reconfig_subscription,
-    );
+    // start_consensus_observer(
+    //     node_config,
+    //     consensus_observer_runtime,
+    //     consensus_observer_client,
+    //     consensus_observer_message_receiver,
+    //     consensus_publisher,
+    //     Arc::new(state_sync_notifier),
+    //     consensus_to_mempool_sender,
+    //     db_rw,
+    //     observer_reconfig_subscription,
+    // );
 }
 
 /// Creates and returns the consensus publisher and runtime (if enabled)

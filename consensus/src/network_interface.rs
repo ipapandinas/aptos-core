@@ -5,7 +5,6 @@
 //! Interface between Consensus and Network layers.
 
 use crate::{
-    dag::DAGNetworkMessage,
     pipeline,
     quorum_store::types::{Batch, BatchMsg, BatchRequest, BatchResponse},
     rand::rand_gen::network_messages::RandGenMessage,
@@ -74,8 +73,6 @@ pub enum ConsensusMsg {
     SignedBatchInfo(Box<SignedBatchInfoMsg>),
     /// Quorum Store: Broadcast a certified proof of store (a digest that received 2f+1 votes).
     ProofOfStoreMsg(Box<ProofOfStoreMsg>),
-    /// DAG protocol message
-    DAGMessage(DAGNetworkMessage),
     /// Commit message
     CommitMessage(Box<CommitMessage>),
     /// Randomness generation message
@@ -115,7 +112,6 @@ impl ConsensusMsg {
             ConsensusMsg::BatchResponse(_) => "BatchResponse",
             ConsensusMsg::SignedBatchInfo(_) => "SignedBatchInfo",
             ConsensusMsg::ProofOfStoreMsg(_) => "ProofOfStoreMsg",
-            ConsensusMsg::DAGMessage(_) => "DAGMessage",
             ConsensusMsg::CommitMessage(_) => "CommitMessage",
             ConsensusMsg::RandGenMessage(_) => "RandGenMessage",
             ConsensusMsg::BatchResponseV2(_) => "BatchResponseV2",

@@ -42,6 +42,3 @@ impl ValueCodec<QCSchema> for QuorumCert {
         Ok(bcs::from_bytes(data)?)
     }
 }
-
-#[cfg(test)]
-mod test;

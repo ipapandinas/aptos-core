@@ -10,7 +10,6 @@ use crate::{
     },
     consensus_observer::publisher::consensus_publisher::ConsensusPublisher,
     counters,
-    dag::{DagBootstrapper, DagCommitSigner, StorageAdapter},
     error::{error_kind, DbError},
     liveness::{
         cached_proposer_election::CachedProposerElection,
@@ -32,7 +31,7 @@ use crate::{
     monitor,
     network::{
         DeprecatedIncomingBlockRetrievalRequest, IncomingBatchRetrievalRequest,
-        IncomingBlockRetrievalRequest, IncomingDAGRequest, IncomingRandGenRequest,
+        IncomingBlockRetrievalRequest, IncomingRandGenRequest,
         IncomingRpcRequest, NetworkReceivers, NetworkSender,
     },
     network_interface::{ConsensusMsg, ConsensusNetworkClient},
@@ -166,8 +165,7 @@ pub struct EpochManager<P: OnChainConfigProvider> {
     // recovery_mode is set to true when the recovery manager is spawned
     recovery_mode: bool,
 
-    aptos_time_service: aptos_time_service::TimeService,
-    dag_rpc_tx: Option<aptos_channel::Sender<AccountAddress, IncomingDAGRequest>>,
+    // dag_rpc_tx: Option<aptos_channel::Sender<(), ()>>,
     dag_shutdown_tx: Option<oneshot::Sender<oneshot::Sender<()>>>,
     dag_config: DagConsensusConfig,
     payload_manager: Arc<dyn TPayloadManager>,
@@ -195,7 +193,6 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
         quorum_store_storage: Arc<dyn QuorumStoreStorage>,
         reconfig_events: ReconfigNotificationListener<P>,
         bounded_executor: BoundedExecutor,
-        aptos_time_service: aptos_time_service::TimeService,
         vtxn_pool: VTxnPoolState,
         rand_storage: Arc<dyn RandStorage<AugmentedData>>,
         consensus_publisher: Option<Arc<ConsensusPublisher>>,
@@ -238,9 +235,8 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
             batch_retrieval_tx: None,
             bounded_executor,
             recovery_mode: false,
-            dag_rpc_tx: None,
+            // dag_rpc_tx: None,
             dag_shutdown_tx: None,
-            aptos_time_service,
             dag_config,
             payload_manager: Arc::new(DirectMempoolPayloadManager::new()),
             rand_storage,
@@ -643,17 +639,6 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
                 .expect("[EpochManager] Fail to drop round manager");
         }
         self.round_manager_tx = None;
-
-        if let Some(close_tx) = self.dag_shutdown_tx.take() {
-            // Release the previous RoundManager, especially the SafetyRule client
-            let (ack_tx, ack_rx) = oneshot::channel();
-            close_tx
-                .send(ack_tx)
-                .expect("[EpochManager] Fail to drop DAG bootstrapper");
-            ack_rx
-                .await
-                .expect("[EpochManager] Fail to drop DAG bootstrapper");
-        }
         self.dag_shutdown_tx = None;
 
         // Shutdown the previous rand manager
@@ -1251,39 +1236,21 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
 
         self.rand_manager_msg_tx = Some(rand_msg_tx);
 
-        if consensus_config.is_dag_enabled() {
-            self.start_new_epoch_with_dag(
-                epoch_state,
-                loaded_consensus_key.clone(),
-                consensus_config,
-                execution_config,
-                onchain_randomness_config,
-                jwk_consensus_config,
-                network_sender,
-                payload_client,
-                payload_manager,
-                rand_config,
-                fast_rand_config,
-                rand_msg_rx,
-            )
-            .await
-        } else {
-            self.start_new_epoch_with_jolteon(
-                loaded_consensus_key.clone(),
-                epoch_state,
-                consensus_config,
-                execution_config,
-                onchain_randomness_config,
-                jwk_consensus_config,
-                network_sender,
-                payload_client,
-                payload_manager,
-                rand_config,
-                fast_rand_config,
-                rand_msg_rx,
-            )
-            .await
-        }
+        self.start_new_epoch_with_jolteon(
+            loaded_consensus_key.clone(),
+            epoch_state,
+            consensus_config,
+            execution_config,
+            onchain_randomness_config,
+            jwk_consensus_config,
+            network_sender,
+            payload_client,
+            payload_manager,
+            rand_config,
+            fast_rand_config,
+            rand_msg_rx,
+        )
+        .await
     }
 
     async fn initialize_shared_component(
@@ -1370,107 +1337,6 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
                 .await
             },
         }
-    }
-
-    async fn start_new_epoch_with_dag(
-        &mut self,
-        epoch_state: Arc<EpochState>,
-        loaded_consensus_key: Arc<PrivateKey>,
-        onchain_consensus_config: OnChainConsensusConfig,
-        on_chain_execution_config: OnChainExecutionConfig,
-        onchain_randomness_config: OnChainRandomnessConfig,
-        onchain_jwk_consensus_config: OnChainJWKConsensusConfig,
-        network_sender: NetworkSender,
-        payload_client: Arc<dyn PayloadClient>,
-        payload_manager: Arc<dyn TPayloadManager>,
-        rand_config: Option<RandConfig>,
-        fast_rand_config: Option<RandConfig>,
-        rand_msg_rx: aptos_channel::Receiver<AccountAddress, IncomingRandGenRequest>,
-    ) {
-        let epoch = epoch_state.epoch;
-        let signer = Arc::new(ValidatorSigner::new(
-            self.author,
-            loaded_consensus_key.clone(),
-        ));
-        let commit_signer = Arc::new(DagCommitSigner::new(signer.clone()));
-
-        assert!(
-            onchain_consensus_config.decoupled_execution(),
-            "decoupled execution must be enabled"
-        );
-        let highest_committed_round = self
-            .storage
-            .aptos_db()
-            .get_latest_ledger_info()
-            .expect("unable to get latest ledger info")
-            .commit_info()
-            .round();
-
-        self.execution_client
-            .start_epoch(
-                loaded_consensus_key,
-                epoch_state.clone(),
-                commit_signer,
-                payload_manager.clone(),
-                &onchain_consensus_config,
-                &on_chain_execution_config,
-                &onchain_randomness_config,
-                rand_config,
-                fast_rand_config,
-                rand_msg_rx,
-                highest_committed_round,
-            )
-            .await;
-
-        let onchain_dag_consensus_config = onchain_consensus_config.unwrap_dag_config_v1();
-        let epoch_to_validators = self.extract_epoch_proposers(
-            &epoch_state,
-            onchain_dag_consensus_config.dag_ordering_causal_history_window as u32,
-            epoch_state.verifier.get_ordered_account_addresses(),
-            onchain_dag_consensus_config.dag_ordering_causal_history_window as u64,
-        );
-        let dag_storage = Arc::new(StorageAdapter::new(
-            epoch,
-            epoch_to_validators,
-            self.storage.consensus_db(),
-            self.storage.aptos_db(),
-        ));
-
-        let network_sender_arc = Arc::new(network_sender);
-
-        let bootstrapper = DagBootstrapper::new(
-            self.author,
-            self.dag_config.clone(),
-            onchain_dag_consensus_config.clone(),
-            signer,
-            epoch_state.clone(),
-            dag_storage,
-            network_sender_arc.clone(),
-            network_sender_arc.clone(),
-            network_sender_arc,
-            self.aptos_time_service.clone(),
-            payload_manager,
-            payload_client,
-            self.execution_client
-                .get_execution_channel()
-                .expect("unable to get execution channel"),
-            self.execution_client.clone(),
-            onchain_consensus_config.quorum_store_enabled(),
-            onchain_consensus_config.effective_validator_txn_config(),
-            onchain_randomness_config,
-            onchain_jwk_consensus_config,
-            self.bounded_executor.clone(),
-            self.config
-                .quorum_store
-                .allow_batches_without_pos_in_proposal,
-        );
-
-        let (dag_rpc_tx, dag_rpc_rx) = aptos_channel::new(QueueStyle::FIFO, 10, None);
-        self.dag_rpc_tx = Some(dag_rpc_tx);
-        let (dag_shutdown_tx, dag_shutdown_rx) = oneshot::channel();
-        self.dag_shutdown_tx = Some(dag_shutdown_tx);
-
-        tokio::spawn(bootstrapper.start(dag_rpc_rx, dag_shutdown_rx));
     }
 
     fn enable_quorum_store(&mut self, onchain_config: &OnChainConsensusConfig) -> bool {
@@ -1807,13 +1673,6 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
                     tx.push(peer_id, request)
                 } else {
                     Err(anyhow::anyhow!("Quorum store not started"))
-                }
-            },
-            IncomingRpcRequest::DAGRequest(request) => {
-                if let Some(tx) = &self.dag_rpc_tx {
-                    tx.push(peer_id, request)
-                } else {
-                    Err(anyhow::anyhow!("DAG not bootstrapped"))
                 }
             },
             IncomingRpcRequest::CommitRequest(request) => {

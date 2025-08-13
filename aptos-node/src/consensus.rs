@@ -207,16 +207,16 @@ pub fn create_consensus_observer_and_publisher(
 /// Creates and starts the consensus observer (if enabled)
 fn create_consensus_observer(
     node_config: &NodeConfig,
-    consensus_observer_runtime: &Runtime,
-    consensus_observer_client: Arc<
+    _consensus_observer_runtime: &Runtime,
+    _consensus_observer_client: Arc<
         ConsensusObserverClient<NetworkClient<ConsensusObserverMessage>>,
     >,
-    consensus_observer_message_receiver: Receiver<(), ConsensusObserverNetworkMessage>,
-    consensus_publisher: Option<Arc<ConsensusPublisher>>,
-    state_sync_notifier: ConsensusNotifier,
-    consensus_to_mempool_sender: Sender<QuorumStoreRequest>,
-    db_rw: DbReaderWriter,
-    observer_reconfig_subscription: Option<ReconfigNotificationListener<DbBackedOnChainConfig>>,
+    _consensus_observer_message_receiver: Receiver<(), ConsensusObserverNetworkMessage>,
+    _consensus_publisher: Option<Arc<ConsensusPublisher>>,
+    _state_sync_notifier: ConsensusNotifier,
+    _consensus_to_mempool_sender: Sender<QuorumStoreRequest>,
+    _db_rw: DbReaderWriter,
+    _observer_reconfig_subscription: Option<ReconfigNotificationListener<DbBackedOnChainConfig>>,
 ) {
     // If the observer is not enabled, return early
     if !node_config.consensus_observer.observer_enabled {

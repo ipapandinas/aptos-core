@@ -770,27 +770,6 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
         (payload_manager, payload_client, quorum_store_builder)
     }
 
-    fn set_epoch_start_metrics(&self, epoch_state: &EpochState) {
-        counters::EPOCH.set(epoch_state.epoch as i64);
-        counters::CURRENT_EPOCH_VALIDATORS.set(epoch_state.verifier.len() as i64);
-
-        counters::TOTAL_VOTING_POWER.set(epoch_state.verifier.total_voting_power() as f64);
-        counters::VALIDATOR_VOTING_POWER.set(
-            epoch_state
-                .verifier
-                .get_voting_power(&self.author)
-                .unwrap_or(0) as f64,
-        );
-        epoch_state
-            .verifier
-            .get_ordered_account_addresses_iter()
-            .for_each(|peer_id| {
-                counters::ALL_VALIDATORS_VOTING_POWER
-                    .with_label_values(&[&peer_id.to_string()])
-                    .set(epoch_state.verifier.get_voting_power(&peer_id).unwrap_or(0) as i64)
-            });
-    }
-
     async fn start_round_manager(
         &mut self,
         consensus_key: Arc<PrivateKey>,
@@ -1317,7 +1296,6 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
         Arc<dyn PayloadClient>,
         Arc<dyn TPayloadManager>,
     ) {
-        self.set_epoch_start_metrics(epoch_state);
         self.quorum_store_enabled = self.enable_quorum_store(consensus_config);
         let network_sender = self.create_network_sender(epoch_state);
         let (payload_manager, quorum_store_client, quorum_store_builder) = self

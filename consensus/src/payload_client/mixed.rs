@@ -11,7 +11,6 @@ use aptos_consensus_types::{
 use aptos_logger::debug;
 use aptos_types::{on_chain_config::ValidatorTxnConfig, validator_txn::ValidatorTransaction};
 use aptos_validator_transaction_pool::TransactionFilter;
-use fail::fail_point;
 use std::{cmp::min, sync::Arc, time::Instant};
 
 pub struct MixedPayloadClient {
@@ -34,23 +33,6 @@ impl MixedPayloadClient {
             user_payload_client,
         }
     }
-
-    /// When enabled in smoke tests, generate 2 random validator transactions, 1 valid, 1 invalid.
-    fn extra_test_only_vtxns(&self) -> Vec<ValidatorTransaction> {
-        fail_point!("mixed_payload_client::extra_test_only_vtxns", |_| {
-            use aptos_types::dkg::{DKGTranscript, DKGTranscriptMetadata};
-            use move_core_types::account_address::AccountAddress;
-
-            vec![ValidatorTransaction::DKGResult(DKGTranscript {
-                metadata: DKGTranscriptMetadata {
-                    epoch: 999,
-                    author: AccountAddress::ZERO,
-                },
-                transcript_bytes: vec![],
-            })]
-        });
-        vec![]
-    }
 }
 
 #[async_trait::async_trait]
@@ -62,7 +44,7 @@ impl PayloadClient for MixedPayloadClient {
     ) -> anyhow::Result<(Vec<ValidatorTransaction>, Payload), QuorumStoreError> {
         // Pull validator txns first.
         let validator_txn_pull_timer = Instant::now();
-        let mut validator_txns = self
+        let validator_txns = self
             .validator_txn_pool_client
             .pull(
                 params.max_poll_time,
@@ -84,8 +66,6 @@ impl PayloadClient for MixedPayloadClient {
                 .map(|txn| txn.size_in_bytes())
                 .sum::<usize>() as u64,
         );
-
-        validator_txns.extend(self.extra_test_only_vtxns());
 
         debug!("num_validator_txns={}", validator_txns.len());
         // Update constraints with validator txn pull results.

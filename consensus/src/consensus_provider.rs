@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    consensus_observer::publisher::consensus_publisher::ConsensusPublisher,
     counters,
     epoch_manager::EpochManager,
     network::NetworkTask,
@@ -38,7 +37,6 @@ pub fn start_consensus(
     aptos_db: DbReaderWriter,
     reconfig_events: ReconfigNotificationListener<DbBackedOnChainConfig>,
     vtxn_pool: VTxnPoolState,
-    consensus_publisher: Option<Arc<ConsensusPublisher>>,
 ) -> (Runtime, Arc<StorageWriteProxy>, Arc<QuorumStoreDB>) {
     let runtime = aptos_runtimes::spawn_named_runtime("consensus".into(), None);
     let storage = Arc::new(StorageWriteProxy::new(node_config, aptos_db.reader.clone()));
@@ -98,7 +96,6 @@ pub fn start_consensus(
         bounded_executor,
         vtxn_pool,
         rand_storage,
-        consensus_publisher,
     );
 
     let (network_task, network_receiver) = NetworkTask::new(network_service_events, self_receiver);

@@ -25,20 +25,6 @@ pub struct BlockPreparer {
 }
 
 impl BlockPreparer {
-    pub fn new(
-        payload_manager: Arc<dyn TPayloadManager>,
-        txn_filter_config: Arc<BlockTransactionFilterConfig>,
-        txn_deduper: Arc<dyn TransactionDeduper>,
-        txn_shuffler: Arc<dyn TransactionShuffler>,
-    ) -> Self {
-        Self {
-            payload_manager,
-            txn_filter_config,
-            txn_deduper,
-            txn_shuffler,
-        }
-    }
-
     pub async fn prepare_block(
         &self,
         block: &Block,

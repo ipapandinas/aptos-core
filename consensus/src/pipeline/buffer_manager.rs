@@ -4,10 +4,6 @@
 
 use crate::{
     block_storage::tracing::{observe_block, BlockStage},
-    consensus_observer::{
-        network::observer_message::ConsensusObserverMessage,
-        publisher::consensus_publisher::ConsensusPublisher,
-    },
     counters::{self, log_executor_error_occurred},
     monitor,
     network::{IncomingCommitRequest, NetworkSender},
@@ -160,7 +156,6 @@ pub struct BufferManager {
 
     // Consensus publisher for downstream observers.
     consensus_observer_config: ConsensusObserverConfig,
-    consensus_publisher: Option<Arc<ConsensusPublisher>>,
 
     pending_commit_proofs: BTreeMap<Round, LedgerInfoWithSignatures>,
 
@@ -200,7 +195,6 @@ impl BufferManager {
         back_pressure_enabled: bool,
         highest_committed_round: Round,
         consensus_observer_config: ConsensusObserverConfig,
-        consensus_publisher: Option<Arc<ConsensusPublisher>>,
         max_pending_rounds_in_commit_vote_cache: u64,
     ) -> Self {
         let buffer = Buffer::<BufferItem>::new();
@@ -256,7 +250,6 @@ impl BufferManager {
             highest_committed_round,
             latest_round: highest_committed_round,
             consensus_observer_config,
-            consensus_publisher,
 
             pending_commit_proofs: BTreeMap::new(),
 
@@ -398,13 +391,6 @@ impl BufferManager {
         let request = self.create_new_request(ExecutionRequest {
             ordered_blocks: ordered_blocks.clone(),
         });
-        if let Some(consensus_publisher) = &self.consensus_publisher {
-            let message = ConsensusObserverMessage::new_ordered_block_message(
-                ordered_blocks.clone(),
-                ordered_proof.clone(),
-            );
-            consensus_publisher.publish_message(message);
-        }
         self.execution_schedule_phase_tx
             .send(request)
             .await
@@ -506,11 +492,7 @@ impl BufferManager {
                 // As all the validators broadcast commit votes directly to all other validators,
                 // the proposer do not have to broadcast commit decision again.
                 let commit_proof = aggregated_item.commit_proof.clone();
-                if let Some(consensus_publisher) = &self.consensus_publisher {
-                    let message =
-                        ConsensusObserverMessage::new_commit_decision_message(commit_proof.clone());
-                    consensus_publisher.publish_message(message);
-                }
+
                 for block in &blocks_to_persist {
                     self.pending_commit_blocks
                         .insert(block.round(), block.clone());

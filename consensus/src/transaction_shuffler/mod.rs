@@ -1,11 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use aptos_types::{
-    transaction::{
-        signature_verified_transaction::SignatureVerifiedTransaction, SignedTransaction,
-    },
-};
+use aptos_types::transaction::SignedTransaction;
 
 mod use_case_aware;
 // re-export use case aware shuffler for fuzzer.
@@ -26,13 +22,6 @@ pub trait TransactionShuffler: Send + Sync {
         &self,
         txns: Vec<SignedTransaction>,
     ) -> Box<dyn Iterator<Item = SignedTransaction> + 'static>;
-
-    /// Given a configuration and a vector of SignatureVerifiedTransaction, return an iterator of
-    /// SignatureVerifiedTransaction.
-    fn signature_verified_transaction_iterator(
-        &self,
-        txns: Vec<SignatureVerifiedTransaction>,
-    ) -> Box<dyn Iterator<Item = SignatureVerifiedTransaction> + 'static>;
 }
 
 /// No Op Shuffler to maintain backward compatibility
@@ -47,13 +36,6 @@ impl TransactionShuffler for NoOpShuffler {
         &self,
         txns: Vec<SignedTransaction>,
     ) -> Box<dyn Iterator<Item = SignedTransaction>> {
-        Box::new(txns.into_iter())
-    }
-
-    fn signature_verified_transaction_iterator(
-        &self,
-        txns: Vec<SignatureVerifiedTransaction>,
-    ) -> Box<dyn Iterator<Item = SignatureVerifiedTransaction>> {
         Box::new(txns.into_iter())
     }
 }

@@ -3,7 +3,7 @@
 
 use crate::transaction_shuffler::TransactionShuffler;
 use aptos_types::transaction::{
-    signature_verified_transaction::SignatureVerifiedTransaction, use_case::UseCaseKey,
+    use_case::UseCaseKey,
     SignedTransaction,
 };
 use iterator::ShuffledTransactionIterator;
@@ -66,14 +66,6 @@ impl TransactionShuffler for UseCaseAwareShuffler {
         &self,
         txns: Vec<SignedTransaction>,
     ) -> Box<dyn Iterator<Item = SignedTransaction> + 'static> {
-        let iterator = ShuffledTransactionIterator::new(self.config.clone()).extended_with(txns);
-        Box::new(iterator)
-    }
-
-    fn signature_verified_transaction_iterator(
-        &self,
-        txns: Vec<SignatureVerifiedTransaction>,
-    ) -> Box<dyn Iterator<Item = SignatureVerifiedTransaction> + 'static> {
         let iterator = ShuffledTransactionIterator::new(self.config.clone()).extended_with(txns);
         Box::new(iterator)
     }
